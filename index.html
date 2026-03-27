@@ -62,6 +62,8 @@
     .progress-fill { height: 100%; border-radius: 3px; transition: width 0.3s ease; }
     .progress-fill.green { background: var(--up); } .progress-fill.orange { background: #F59E0B; } .progress-fill.red { background: var(--down); }
     .charts-section { margin-bottom: 24px; }
+    .charts-row { display: flex; gap: 16px; }
+    .charts-row .chart-card { flex: 1; margin-bottom: 0; }
     .chart-card { background: white; padding: 24px; border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 1px 3px rgba(0,0,0,0.05); margin-bottom: 16px; }
     .chart-title { font-size: 14px; font-weight: 700; margin-bottom: 16px; color: var(--text-primary); }
     .chart-container { position: relative; height: 320px; }
@@ -99,9 +101,9 @@
         </div>
         <div class="header-controls">
           <div class="brand-selector" id="brandSelector">
-            <button class="brand-btn selected" data-brand="lr">LR</button>
-            <button class="brand-btn selected" data-brand="lb">LB</button>
-            <button class="brand-btn selected" data-brand="cv">CV</button>
+            <button class="brand-btn selected" data-brand="lr">layer refine</button>
+            <button class="brand-btn selected" data-brand="lb">layer basic</button>
+            <button class="brand-btn selected" data-brand="cv">COVE</button>
           </div>
           <div class="mode-toggle">
             <button class="mode-btn active" data-mode="single">단일 기간</button>
@@ -146,16 +148,18 @@
       <div class="kpi-cards" id="kpiCards"></div>
     </div>
     <div class="charts-section">
-      <div class="chart-card">
-        <div class="chart-title">매출 트렌드</div>
-        <div class="chart-container">
-          <canvas id="gmvChart"></canvas>
+      <div id="chartsContainer">
+        <div class="chart-card">
+          <div class="chart-title">매출 트렌드</div>
+          <div class="chart-container">
+            <canvas id="gmvChart"></canvas>
+          </div>
         </div>
-      </div>
-      <div class="chart-card">
-        <div class="chart-title">매총율 트렌드</div>
-        <div class="chart-container">
-          <canvas id="marginChart"></canvas>
+        <div class="chart-card" style="margin-top:16px">
+          <div class="chart-title">매총율 트렌드</div>
+          <div class="chart-container">
+            <canvas id="marginChart"></canvas>
+          </div>
         </div>
       </div>
     </div>
@@ -178,30 +182,162 @@
   <script src="data.js"></script>
   <script>
     // Backup DAYS_KR in case data.js doesn't load
-    if (typeof DAYS_KR === 'undefined') {
-      const DAYS_KR=['일','월','화','수','목','금','토'];
-    }
+    if (typeof DAYS_KR === 'undefined') { const DAYS_KR=['일','월','화','수','목','금','토']; }
+
+    const BRAND_NAMES = {lr:'layer refine', lb:'layer basic', cv:'COVE'};
 
     // Convert DAILY_DATA from array format to object format for compatibility
-    const DAILY_DATA_FORMATTED = DAILY_DATA.map(row => ({
-      date: row[0],
-      gmv: row[1],
-      qty: row[2],
-      mr: row[3]
-    }));
+    const DAILY_DATA_FORMATTED = DAILY_DATA.map(row => ({date:row[0],gmv:row[1],qty:row[2],mr:row[3]}));
 
-    let state={mode:'single',brands:['lr','lb','cv'],startDate1:'2026-02-26',endDate1:'2026-03-26',startDate2:'',endDate2:'',sortColumn:null,sortDir:'desc',expandedProducts:new Set(),searchTerm:'',gmvChart:null,marginChart:null};
+    let state={mode:'single',brands:['lr','lb','cv'],startDate1:'2026-02-26',endDate1:'2026-03-26',startDate2:'',endDate2:'',sortColumn:null,sortDir:'desc',expandedProducts:new Set(),searchTerm:'',gmvChart:null,marginChart:null,gmvChart2:null,marginChart2:null};
 
     function fmtDateLabel(d){return`${d.getMonth()+1}/${d.getDate()}(${DAYS_KR[d.getDay()]})`;}
-    function fmtKRW(val){if(val>=100000000)return(val/100000000).toFixed(1)+'억';if(val>=10000)return(val/10000).toFixed(0)+'만';return val+'원';}
+    function fmtKRW(val){if(!val||isNaN(val))return'0백만';if(val>=1000000)return(val/1000000).toFixed(1)+'백만';if(val>=10000)return(val/10000).toFixed(0)+'만';return val+'원';}
     function filterByDateRange(data,start,end){const startD=new Date(start);const endD=new Date(end);return data.filter(d=>{const date=new Date(d.date);return date>=startD&&date<=endD;});}
     function getSelectedBrands(){return Array.from(document.querySelectorAll('.brand-btn.selected')).map(b=>b.dataset.brand);}
-    function initEventListeners(){document.querySelectorAll('.brand-btn').forEach(btn=>{btn.addEventListener('click',e=>{const selected=getSelectedBrands();if(selected.length===1&&selected.includes(btn.dataset.brand))return;btn.classList.toggle('selected');render();});});document.querySelectorAll('.mode-btn').forEach(btn=>{btn.addEventListener('click',()=>{document.querySelectorAll('.mode-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');state.mode=btn.dataset.mode;updateDateLayout();render();});});document.querySelectorAll('.quick-btn').forEach(btn=>{btn.addEventListener('click',()=>{const days=btn.dataset.days;const month=btn.dataset.month;const prevPeriod=btn.dataset.prevPeriod;if(days){const end=new Date('2026-03-27');const start=new Date(end);start.setDate(start.getDate()-parseInt(days)+1);document.getElementById('startDate1').value=start.toISOString().split('T')[0];document.getElementById('endDate1').value=end.toISOString().split('T')[0];}else if(month==='current'){document.getElementById('startDate1').value='2026-03-01';document.getElementById('endDate1').value='2026-03-27';}else if(prevPeriod){const start1=new Date(document.getElementById('startDate1').value);const end1=new Date(document.getElementById('endDate1').value);const days=(end1-start1)/(1000*60*60*24)+1;const end2=new Date(start1);end2.setDate(end2.getDate()-1);const start2=new Date(end2);start2.setDate(start2.getDate()-days+1);document.getElementById('startDate2').value=start2.toISOString().split('T')[0];document.getElementById('endDate2').value=end2.toISOString().split('T')[0];}});});document.getElementById('applyBtn').addEventListener('click',()=>{state.startDate1=document.getElementById('startDate1').value;state.endDate1=document.getElementById('endDate1').value;if(state.mode==='compare'){state.startDate2=document.getElementById('startDate2').value;state.endDate2=document.getElementById('endDate2').value;}render();});document.getElementById('searchBox').addEventListener('input',e=>{state.searchTerm=e.target.value.toLowerCase();renderTable();});}
+
+    function initEventListeners(){
+      document.querySelectorAll('.brand-btn').forEach(btn=>{btn.addEventListener('click',e=>{const selected=getSelectedBrands();if(selected.length===1&&selected.includes(btn.dataset.brand))return;btn.classList.toggle('selected');render();});});
+      document.querySelectorAll('.mode-btn').forEach(btn=>{btn.addEventListener('click',()=>{document.querySelectorAll('.mode-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');state.mode=btn.dataset.mode;updateDateLayout();render();});});
+      document.querySelectorAll('.quick-btn').forEach(btn=>{btn.addEventListener('click',()=>{const days=btn.dataset.days;const month=btn.dataset.month;const prevPeriod=btn.dataset.prevPeriod;if(days){const end=new Date('2026-03-27');const start=new Date(end);start.setDate(start.getDate()-parseInt(days)+1);document.getElementById('startDate1').value=start.toISOString().split('T')[0];document.getElementById('endDate1').value=end.toISOString().split('T')[0];}else if(month==='current'){document.getElementById('startDate1').value='2026-03-01';document.getElementById('endDate1').value='2026-03-27';}else if(prevPeriod){const start1=new Date(document.getElementById('startDate1').value);const end1=new Date(document.getElementById('endDate1').value);const dayCount=(end1-start1)/(1000*60*60*24)+1;const end2=new Date(start1);end2.setDate(end2.getDate()-1);const start2=new Date(end2);start2.setDate(start2.getDate()-dayCount+1);document.getElementById('startDate2').value=start2.toISOString().split('T')[0];document.getElementById('endDate2').value=end2.toISOString().split('T')[0];}});});
+      document.getElementById('applyBtn').addEventListener('click',()=>{state.startDate1=document.getElementById('startDate1').value;state.endDate1=document.getElementById('endDate1').value;if(state.mode==='compare'){state.startDate2=document.getElementById('startDate2').value;state.endDate2=document.getElementById('endDate2').value;}render();});
+      document.getElementById('searchBox').addEventListener('input',e=>{state.searchTerm=e.target.value.toLowerCase();renderTable();});
+    }
+
     function updateDateLayout(){const dateGroup=document.getElementById('dateGroup');const period2Group=document.getElementById('period2Group');if(state.mode==='compare'){dateGroup.classList.add('compare-mode');period2Group.classList.remove('hidden');}else{dateGroup.classList.remove('compare-mode');period2Group.classList.add('hidden');}}
-    function renderKPI(){const container=document.getElementById('kpiCards');container.innerHTML='';const brands=getSelectedBrands();brands.forEach(brand=>{const options=OPTIONS_DATA.filter(o=>PRODUCTS[o[0]]?.brand===brand);const gmv1=options.reduce((s,o)=>s+o[2],0);const qty1=options.reduce((s,o)=>s+o[3],0);const target=TARGETS[brand];const achievement=(gmv1/target)*100;let achClass='green';if(achievement<100)achClass=achievement>=80?'orange':'red';const card=document.createElement('div');card.className='kpi-card';card.innerHTML=`<div class="kpi-header"><div class="kpi-title">${brand.toUpperCase()}</div><div class="kpi-brand ${brand}">${brand.toUpperCase()}</div></div><div class="kpi-values"><div class="kpi-value"><div class="kpi-value-label">매출</div><div class="kpi-value-number">${fmtKRW(gmv1)}</div></div><div class="kpi-value"><div class="kpi-value-label">수량</div><div class="kpi-value-number">${qty1.toLocaleString()}</div></div></div><div class="kpi-progress"><div class="kpi-progress-label"><span>목표 달성률</span><span>${Math.min(achievement,999).toFixed(1)}%</span></div><div class="progress-bar"><div class="progress-fill ${achClass}" style="width: ${Math.min(achievement,100)}%"></div></div></div>`;container.appendChild(card);});}
-    function renderCharts(){const period1=filterByDateRange(DAILY_DATA_FORMATTED,state.startDate1,state.endDate1);const period2=state.mode==='compare'?filterByDateRange(DAILY_DATA_FORMATTED,state.startDate2,state.endDate2):[];const gmvCtx=document.getElementById('gmvChart').getContext('2d');if(state.gmvChart)state.gmvChart.destroy();const labels1=period1.map(d=>fmtDateLabel(new Date(d.date)));const data1=period1.map(d=>d.gmv);const datasets=[{label:state.mode==='compare'?'기간 1':'매출',data:data1,borderColor:'#35C5F0',backgroundColor:'rgba(53, 197, 240, 0.1)',tension:0.3,fill:true,pointRadius:3,pointHoverRadius:5}];if(state.mode==='compare'){const data2=period2.map(d=>d.gmv);datasets.push({label:'기간 2',data:data2,borderColor:'#9BC4CB',backgroundColor:'rgba(155, 196, 203, 0.1)',tension:0.3,fill:true,pointRadius:3,pointHoverRadius:5});}state.gmvChart=new Chart(gmvCtx,{type:'line',data:{labels:labels1,datasets:datasets},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,position:'top'}},scales:{y:{ticks:{callback:v=>fmtKRW(v)}}}}});const marginCtx=document.getElementById('marginChart').getContext('2d');if(state.marginChart)state.marginChart.destroy();const marginData1=period1.map(d=>d.mr);const marginDatasets=[{label:state.mode==='compare'?'기간 1':'매총율',data:marginData1,borderColor:'#35C5F0',backgroundColor:'rgba(53, 197, 240, 0.1)',tension:0.3,fill:true,pointRadius:3,pointHoverRadius:5}];if(state.mode==='compare'){const marginData2=period2.map(d=>d.mr);marginDatasets.push({label:'기간 2',data:marginData2,borderColor:'#9BC4CB',backgroundColor:'rgba(155, 196, 203, 0.1)',tension:0.3,fill:true,pointRadius:3,pointHoverRadius:5});}state.marginChart=new Chart(marginCtx,{type:'line',data:{labels:labels1,datasets:marginDatasets},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,position:'top'}},scales:{y:{min:0,max:100,ticks:{callback:v=>v+'%'}}}}});}
+
+    function renderKPI(){
+      const container=document.getElementById('kpiCards');container.innerHTML='';
+      const brands=getSelectedBrands();
+      brands.forEach(brand=>{
+        const options=OPTIONS_DATA.filter(o=>PRODUCTS[o[0]]?.brand===brand);
+        const gmv1=options.reduce((s,o)=>s+o[2],0);
+        const qty1=options.reduce((s,o)=>s+o[3],0);
+        const target=TARGETS[brand];
+        const achievement=(gmv1/target)*100;
+        let achClass='green';if(achievement<100)achClass=achievement>=80?'orange':'red';
+        const brandName=BRAND_NAMES[brand]||brand.toUpperCase();
+        const card=document.createElement('div');card.className='kpi-card';
+        card.innerHTML=`<div class="kpi-header"><div class="kpi-title">${brandName}</div><div class="kpi-brand ${brand}">${brandName}</div></div><div class="kpi-values"><div class="kpi-value"><div class="kpi-value-label">매출</div><div class="kpi-value-number">${fmtKRW(gmv1)}</div></div><div class="kpi-value"><div class="kpi-value-label">수량</div><div class="kpi-value-number">${qty1.toLocaleString()}</div></div></div><div class="kpi-progress"><div class="kpi-progress-label"><span>목표 달성률</span><span>${Math.min(achievement,999).toFixed(1)}% (목표 ${fmtKRW(target)})</span></div><div class="progress-bar"><div class="progress-fill ${achClass}" style="width: ${Math.min(achievement,100)}%"></div></div></div>`;
+        container.appendChild(card);
+      });
+    }
+
+    function makeMarkerPlugin(period,label){
+      // draws vertical lines for marketing events that fall within period date range
+      return {id:'markerPlugin_'+label,afterDraw(chart){
+        const ctx=chart.ctx;const xScale=chart.scales.x;const yScale=chart.scales.y;
+        if(!xScale||!yScale)return;
+        const events=typeof MARKETING_EVENTS!=='undefined'?MARKETING_EVENTS:[];
+        const startD=new Date(period[0]?.date||'9999');const endD=new Date(period[period.length-1]?.date||'0000');
+        events.forEach(ev=>{
+          const evD=new Date(ev.date);if(evD<startD||evD>endD)return;
+          const idx=period.findIndex(d=>d.date===ev.date);if(idx<0)return;
+          const x=xScale.getPixelForValue(idx);
+          ctx.save();ctx.beginPath();ctx.moveTo(x,yScale.top);ctx.lineTo(x,yScale.bottom);
+          ctx.strokeStyle='rgba(255,100,100,0.7)';ctx.lineWidth=2;ctx.setLineDash([4,3]);ctx.stroke();
+          ctx.fillStyle='rgba(255,100,100,0.9)';ctx.font='bold 11px sans-serif';
+          ctx.fillText(ev.label,x+4,yScale.top+14);ctx.restore();
+        });
+      }};
+    }
+
+    function rebuildChartsLayout(isCompare){
+      const container=document.getElementById('chartsContainer');
+      // destroy existing charts
+      ['gmvChart','marginChart','gmvChart2','marginChart2'].forEach(id=>{
+        if(state[id]){state[id].destroy();state[id]=null;}
+      });
+      if(isCompare){
+        container.innerHTML=`
+          <div class="charts-row">
+            <div class="chart-card"><div class="chart-title">기간 1 · 매출 트렌드</div><div class="chart-container"><canvas id="gmvChart"></canvas></div></div>
+            <div class="chart-card"><div class="chart-title">기간 2 · 매출 트렌드</div><div class="chart-container"><canvas id="gmvChart2"></canvas></div></div>
+          </div>
+          <div class="charts-row" style="margin-top:16px">
+            <div class="chart-card"><div class="chart-title">기간 1 · 매총율 트렌드</div><div class="chart-container"><canvas id="marginChart"></canvas></div></div>
+            <div class="chart-card"><div class="chart-title">기간 2 · 매총율 트렌드</div><div class="chart-container"><canvas id="marginChart2"></canvas></div></div>
+          </div>`;
+      } else {
+        container.innerHTML=`
+          <div class="chart-card"><div class="chart-title">매출 트렌드</div><div class="chart-container"><canvas id="gmvChart"></canvas></div></div>
+          <div class="chart-card" style="margin-top:16px"><div class="chart-title">매총율 트렌드</div><div class="chart-container"><canvas id="marginChart"></canvas></div></div>`;
+      }
+    }
+
+    function renderCharts(){
+      const period1=filterByDateRange(DAILY_DATA_FORMATTED,state.startDate1,state.endDate1);
+      const period2=state.mode==='compare'?filterByDateRange(DAILY_DATA_FORMATTED,state.startDate2,state.endDate2):[];
+      const isCompare=state.mode==='compare';
+      rebuildChartsLayout(isCompare);
+
+      const baseOpts={responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,position:'top'}}};
+      const gmvYOpts={ticks:{callback:v=>fmtKRW(v)}};
+      const mrYOpts={min:0,max:100,ticks:{callback:v=>v+'%'}};
+
+      const mk1=makeMarkerPlugin(period1,'p1');
+
+      // GMV chart period1
+      state.gmvChart=new Chart(document.getElementById('gmvChart').getContext('2d'),{
+        type:'line',plugins:[mk1],
+        data:{labels:period1.map(d=>fmtDateLabel(new Date(d.date))),datasets:[{label:'매출',data:period1.map(d=>d.gmv),borderColor:'#35C5F0',backgroundColor:'rgba(53,197,240,0.1)',tension:0.3,fill:true,pointRadius:3,pointHoverRadius:5}]},
+        options:{...baseOpts,scales:{y:{...gmvYOpts}}}
+      });
+      // Margin chart period1
+      state.marginChart=new Chart(document.getElementById('marginChart').getContext('2d'),{
+        type:'line',plugins:[makeMarkerPlugin(period1,'m1')],
+        data:{labels:period1.map(d=>fmtDateLabel(new Date(d.date))),datasets:[{label:'매총율',data:period1.map(d=>d.mr),borderColor:'#35C5F0',backgroundColor:'rgba(53,197,240,0.1)',tension:0.3,fill:true,pointRadius:3,pointHoverRadius:5}]},
+        options:{...baseOpts,scales:{y:{...mrYOpts}}}
+      });
+
+      if(isCompare&&period2.length>0){
+        const mk2=makeMarkerPlugin(period2,'p2');
+        state.gmvChart2=new Chart(document.getElementById('gmvChart2').getContext('2d'),{
+          type:'line',plugins:[mk2],
+          data:{labels:period2.map(d=>fmtDateLabel(new Date(d.date))),datasets:[{label:'매출',data:period2.map(d=>d.gmv),borderColor:'#9BC4CB',backgroundColor:'rgba(155,196,203,0.1)',tension:0.3,fill:true,pointRadius:3,pointHoverRadius:5}]},
+          options:{...baseOpts,scales:{y:{...gmvYOpts}}}
+        });
+        state.marginChart2=new Chart(document.getElementById('marginChart2').getContext('2d'),{
+          type:'line',plugins:[makeMarkerPlugin(period2,'m2')],
+          data:{labels:period2.map(d=>fmtDateLabel(new Date(d.date))),datasets:[{label:'매총율',data:period2.map(d=>d.mr),borderColor:'#9BC4CB',backgroundColor:'rgba(155,196,203,0.1)',tension:0.3,fill:true,pointRadius:3,pointHoverRadius:5}]},
+          options:{...baseOpts,scales:{y:{...mrYOpts}}}
+        });
+      }
+    }
+
     function buildProductTree(){const tree={};const impMap={};IMP_DATA.forEach(r=>{impMap[r[0]]={imp:r[1],click:r[2],ctr:r[3]};});Object.entries(PRODUCTS).forEach(([pid,prod])=>{if(!tree[pid]){tree[pid]={code:pid,brand:prod.brand,name:prod.name,options:[],gmv:0,qty:0,mr:0,imp:impMap[pid]?.imp||0,click:impMap[pid]?.click||0,ctr:impMap[pid]?.ctr||0};}});OPTIONS_DATA.forEach(o=>{const[pid,oid,gmv,qty,mr]=o;if(tree[pid]){tree[pid].options.push({oid,gmv,qty,mr});tree[pid].gmv+=gmv;tree[pid].qty+=qty;}});Object.values(tree).forEach(prod=>{if(prod.options.length>0){prod.mr=prod.options.reduce((s,o)=>s+o.mr*o.gmv,0)/prod.gmv;}});return tree;}
-    function renderTable(){const tree=buildProductTree();const brands=getSelectedBrands();let products=Object.values(tree).filter(p=>brands.includes(p.brand));if(state.searchTerm){products=products.filter(p=>p.name.toLowerCase().includes(state.searchTerm)||p.code.includes(state.searchTerm));}if(state.sortColumn){products.sort((a,b)=>{let aVal=a[state.sortColumn];let bVal=b[state.sortColumn];if(typeof aVal==='string')aVal=aVal.toLowerCase();if(typeof bVal==='string')bVal=bVal.toLowerCase();const cmp=aVal<bVal?-1:aVal>bVal?1:0;return state.sortDir==='asc'?cmp:-cmp;});}const thead=document.getElementById('tableHead');const tbody=document.getElementById('tableBody');thead.innerHTML='';tbody.innerHTML='';const cols=['expand','name','brand','code','qty','gmv','mr','imp','ctr','cvr'];const colHeaders=['','상품명','브랜드','코드','기간 수량','기간 매출','매총율','임프레션','CTR','CVR'];const headerRow=thead.insertRow();colHeaders.forEach(h=>{const th=document.createElement('th');th.textContent=h;if(h&&h!=='')th.className='sortable';headerRow.appendChild(th);});products.forEach(prod=>{const expanded=state.expandedProducts.has(prod.code);const cvr=prod.click>0?((prod.qty/prod.click)*100).toFixed(2):'0.00';const pRow=tbody.insertRow();pRow.className='product-row';let expandHtml=`<button class="expand-btn ${expanded?'expanded':''}" data-product="${prod.code}">펼치기</button>`;let cells=[expandHtml,prod.name,`<span class="brand-tag ${prod.brand}">${prod.brand.toUpperCase()}</span>`,`<span class="product-code">${prod.code}</span>`,prod.qty.toLocaleString(),fmtKRW(prod.gmv),prod.mr.toFixed(1)+'%',prod.imp.toLocaleString(),prod.ctr.toFixed(2)+'%',cvr+'%'];cells.forEach((c,i)=>{const td=pRow.insertCell(i);if(i===0){td.innerHTML=c;}else if(i===1){td.innerHTML=c;td.style.textAlign='left';}else if(['qty','gmv','imp'].includes(cols[i])){td.className='number';td.textContent=c;}else if(cols[i]==='mr'){td.className='margin-cell '+(prod.mr>=45?'green':prod.mr>=35?'orange':'red');td.textContent=c;}else{td.textContent=c;}});prod.options.forEach(opt=>{const oRow=tbody.insertRow();oRow.className='option-row';if(expanded)oRow.classList.add('show');oRow.dataset.product=prod.code;const optCvr=prod.click>0?((opt.qty/prod.click)*100).toFixed(2):'0.00';let optCells=['',`${opt.oid}`,'','',opt.qty.toLocaleString(),fmtKRW(opt.gmv),opt.mr.toFixed(1)+'%','','',optCvr+'%'];optCells.forEach((c,i)=>{const td=oRow.insertCell(i);if(['qty','gmv'].includes(cols[i])){td.className='number';}if(cols[i]==='mr'){td.className='margin-cell '+(opt.mr>=45?'green':opt.mr>=35?'orange':'red');}td.textContent=c;});});});document.querySelectorAll('.expand-btn').forEach(btn=>{btn.addEventListener('click',e=>{e.preventDefault();const pid=btn.dataset.product;if(state.expandedProducts.has(pid)){state.expandedProducts.delete(pid);btn.classList.remove('expanded');document.querySelectorAll(`tr.option-row[data-product="${pid}"]`).forEach(r=>r.classList.remove('show'));}else{state.expandedProducts.add(pid);btn.classList.add('expanded');document.querySelectorAll(`tr.option-row[data-product="${pid}"]`).forEach(r=>r.classList.add('show'));}});});document.querySelectorAll('th.sortable').forEach((th,i)=>{th.addEventListener('click',()=>{if(state.sortColumn===cols[i]){state.sortDir=state.sortDir==='asc'?'desc':'asc';}else{state.sortColumn=cols[i];state.sortDir='desc';}renderTable();});});}
+
+    function renderTable(){
+      const tree=buildProductTree();const brands=getSelectedBrands();
+      let products=Object.values(tree).filter(p=>brands.includes(p.brand));
+      if(state.searchTerm){products=products.filter(p=>p.name.toLowerCase().includes(state.searchTerm)||p.code.includes(state.searchTerm));}
+      if(state.sortColumn){products.sort((a,b)=>{let aVal=a[state.sortColumn];let bVal=b[state.sortColumn];if(typeof aVal==='string')aVal=aVal.toLowerCase();if(typeof bVal==='string')bVal=bVal.toLowerCase();const cmp=aVal<bVal?-1:aVal>bVal?1:0;return state.sortDir==='asc'?cmp:-cmp;});}
+      const thead=document.getElementById('tableHead');const tbody=document.getElementById('tableBody');thead.innerHTML='';tbody.innerHTML='';
+      const cols=['expand','name','brand','code','qty','gmv','mr','imp','ctr','cvr'];
+      const colHeaders=['','상품명','브랜드','코드','기간 수량','기간 매출','매총율','임프레션','CTR','CVR'];
+      const headerRow=thead.insertRow();
+      colHeaders.forEach(h=>{const th=document.createElement('th');th.textContent=h;if(h&&h!=='')th.className='sortable';headerRow.appendChild(th);});
+      products.forEach(prod=>{
+        const expanded=state.expandedProducts.has(prod.code);
+        const cvr=prod.click>0?((prod.qty/prod.click)*100).toFixed(2):'0.00';
+        const pRow=tbody.insertRow();pRow.className='product-row';
+        const brandName=BRAND_NAMES[prod.brand]||prod.brand.toUpperCase();
+        let expandHtml=`<button class="expand-btn ${expanded?'expanded':''}" data-product="${prod.code}">펼치기</button>`;
+        let cells=[expandHtml,prod.name,`<span class="brand-tag ${prod.brand}">${brandName}</span>`,`<span class="product-code">${prod.code}</span>`,prod.qty.toLocaleString(),fmtKRW(prod.gmv),prod.mr.toFixed(1)+'%',prod.imp.toLocaleString(),prod.ctr.toFixed(2)+'%',cvr+'%'];
+        cells.forEach((c,i)=>{const td=pRow.insertCell(i);if(i===0){td.innerHTML=c;}else if(i===1){td.innerHTML=c;td.style.textAlign='left';}else if(['qty','gmv','imp'].includes(cols[i])){td.className='number';td.textContent=c;}else if(cols[i]==='mr'){td.className='margin-cell '+(prod.mr>=45?'green':prod.mr>=35?'orange':'red');td.textContent=c;}else{td.textContent=c;}});
+        prod.options.forEach(opt=>{
+          const oRow=tbody.insertRow();oRow.className='option-row';if(expanded)oRow.classList.add('show');oRow.dataset.product=prod.code;
+          const optCvr=prod.click>0?((opt.qty/prod.click)*100).toFixed(2):'0.00';
+          const optName=(typeof OPTION_NAMES!=='undefined'&&OPTION_NAMES[opt.oid])?OPTION_NAMES[opt.oid]:opt.oid;
+          const mrVal=opt.mr!=null?opt.mr:0;
+          let optCells=['',optName,'','',opt.qty.toLocaleString(),fmtKRW(opt.gmv),mrVal.toFixed(1)+'%','','',optCvr+'%'];
+          optCells.forEach((c,i)=>{const td=oRow.insertCell(i);if(['qty','gmv'].includes(cols[i])){td.className='number';}if(cols[i]==='mr'){td.className='margin-cell '+(mrVal>=45?'green':mrVal>=35?'orange':'red');}td.textContent=c;});
+        });
+      });
+      document.querySelectorAll('.expand-btn').forEach(btn=>{btn.addEventListener('click',e=>{e.preventDefault();const pid=btn.dataset.product;if(state.expandedProducts.has(pid)){state.expandedProducts.delete(pid);btn.classList.remove('expanded');document.querySelectorAll(`tr.option-row[data-product="${pid}"]`).forEach(r=>r.classList.remove('show'));}else{state.expandedProducts.add(pid);btn.classList.add('expanded');document.querySelectorAll(`tr.option-row[data-product="${pid}"]`).forEach(r=>r.classList.add('show'));}});});
+      document.querySelectorAll('th.sortable').forEach((th,i)=>{th.addEventListener('click',()=>{if(state.sortColumn===cols[i]){state.sortDir=state.sortDir==='asc'?'desc':'asc';}else{state.sortColumn=cols[i];state.sortDir='desc';}renderTable();});});
+    }
+
     function render(){renderKPI();try{renderCharts();}catch(e){console.error('Chart error:',e);}renderTable();if(typeof DATA_UPDATED!=='undefined'){document.getElementById('dataUpdated').textContent=DATA_UPDATED;}}
     initEventListeners();
     render();
