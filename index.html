@@ -192,7 +192,7 @@
     let state={mode:'single',brands:['lr','lb','cv'],startDate1:'2026-02-26',endDate1:'2026-03-26',startDate2:'',endDate2:'',sortColumn:null,sortDir:'desc',expandedProducts:new Set(),searchTerm:'',gmvChart:null,marginChart:null,gmvChart2:null,marginChart2:null};
 
     function fmtDateLabel(d){return`${d.getMonth()+1}/${d.getDate()}(${DAYS_KR[d.getDay()]})`;}
-    function fmtKRW(val){if(!val||isNaN(val))return'0백만';if(val>=1000000)return(val/1000000).toFixed(1)+'백만';if(val>=10000)return(val/10000).toFixed(0)+'만';return val+'원';}
+    function fmtKRW(val){if(!val||isNaN(val))return'0원';if(val>=100000000)return(val/100000000).toFixed(1)+'억';if(val>=10000)return(val/10000).toFixed(0)+'만';return val.toLocaleString()+'원';}
     function filterByDateRange(data,start,end){const startD=new Date(start);const endD=new Date(end);return data.filter(d=>{const date=new Date(d.date);return date>=startD&&date<=endD;});}
     function getSelectedBrands(){return Array.from(document.querySelectorAll('.brand-btn.selected')).map(b=>b.dataset.brand);}
 
