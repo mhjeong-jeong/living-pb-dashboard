@@ -1,5 +1,5 @@
-// ë¦¬ë¹PB ëìë³´ë ë°ì´í° (2026-03-28 08:25 ìµì )
-const DAYS_KR=['ì¼','ì','í','ì','ëª©','ê¸','í '];
+// 리빙PB 대시보드 데이터 (2026-03-28 08:25 최신)
+const DAYS_KR=['일','월','화','수','목','금','토'];
 
 const DAILY_DATA=[
   ['2026-01-27',1737540,54,35.4],
@@ -66,16 +66,16 @@ const DAILY_DATA=[
 ];
 
 const PRODUCTS={
-  '3920046':{brand:'lr',name:'refine / ììë¸ ë¦¬ë²ìë¸ ì´ë¶'},
-  '3919961':{brand:'lr',name:'refine / í¸í íì¬ ì¸í¸'},
-  '3694022':{brand:'lr',name:'refine / ì¤í¸ë¼ì´í ë°ë§¤í¸'},
-  '3640123':{brand:'lr',name:'refine / 60ì ìë©´ í¸íì¹¨êµ¬ì¸í¸'},
-  '3640244':{brand:'lb',name:'basic / ìë¬ì§ì¼ì´ ì¹¨êµ¬ì¸í¸'},
-  '3640346':{brand:'lb',name:'basic / ìë¬ì§ì¼ì´ ì¹¨ëí¨ë'},
-  '3918642':{brand:'lb',name:'basic / ëª¨ë¬ í¸íì¹¨êµ¬ì¸í¸'},
-  '3640185':{brand:'lb',name:'basic / ê·¹ì¸ì¬ í¸íì´ë¶'},
-  '3764904':{brand:'cv',name:'COVE / ëë¸ë ì´ì´ ë´ì'},
-  '3764909':{brand:'cv',name:'COVE / ê·¹ì¸ì¬ ë¸ë­í·'}
+  '3920046':{brand:'lr',name:'refine / 워셔블 리버서블 이불'},
+  '3919961':{brand:'lr',name:'refine / 호텔 타올 세트'},
+  '3694022':{brand:'lr',name:'refine / 스트라이프 발매트'},
+  '3640123':{brand:'lr',name:'refine / 60수 순면 호텔침구세트'},
+  '3640244':{brand:'lb',name:'basic / 알러지케어 침구세트'},
+  '3640346':{brand:'lb',name:'basic / 알러지케어 침대패드'},
+  '3918642':{brand:'lb',name:'basic / 모달 호텔침구세트'},
+  '3640185':{brand:'lb',name:'basic / 극세사 호텔이불'},
+  '3764904':{brand:'cv',name:'COVE / 더블레이어 담요'},
+  '3764909':{brand:'cv',name:'COVE / 극세사 블랭킷'}
 };
 
 const OPTIONS_DATA=[
@@ -310,7 +310,7 @@ const TARGETS={
 
 const DATA_UPDATED='2026-03-28 08:25';
 
-// 일별 브랜드별 데이터: [date, brand, gmv, qty, margin_rate]
+// |� ��� pt0: [date, brand, gmv, qty, margin_rate]
 const DAILY_BRAND_DATA=[
 ['2026-01-27','cv',187200,8,30.3],
 ['2026-01-27','lb',936000,17,34.0],
