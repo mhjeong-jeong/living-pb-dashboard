@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ë¦¬ë¹PB ì¤ì  ëìë³´ë</title>
+  <title>리빙PB 실적 대시보드</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
   <style>
     :root {
@@ -80,7 +80,7 @@
     tr.option-row { background: #FAFBFC; font-size: 12px; display: none; } tr.option-row.show { display: table-row; }
     .expand-btn { cursor: pointer; user-select: none; padding: 4px 8px; border-radius: 3px; font-size: 11px; background: var(--bg); border: 1px solid var(--border); transition: all 0.2s; }
     .expand-btn:hover { background: var(--border); }
-    .expand-btn.expanded::before { content: 'â¼ '; } .expand-btn:not(.expanded)::before { content: 'â¶ '; }
+    .expand-btn.expanded::before { content: '▼ '; } .expand-btn:not(.expanded)::before { content: '▶ '; }
     .product-code { font-family: 'Monaco', 'Courier New', monospace; color: var(--text-secondary); font-size: 12px; }
     .brand-tag { display: inline-block; padding: 2px 6px; border-radius: 3px; font-size: 10px; font-weight: 700; color: white; }
     .brand-tag.lr { background: var(--lr); } .brand-tag.lb { background: var(--lb); } .brand-tag.cv { background: var(--cv); }
@@ -96,8 +96,8 @@
     <div class="header">
       <div class="header-top">
         <div class="header-title">
-          <h1>ë¦¬ë¹PB ì¤ì  ëìë³´ë</h1>
-          <p>layer refine Â· layer basic Â· COVE â Athena ì¤ë°ì´í° ê¸°ë°</p>
+          <h1>리빙PB 실적 대시보드</h1>
+          <p>layer refine · layer basic · COVE — Athena 실데이터 기반</p>
         </div>
         <div class="header-controls">
           <div class="brand-selector" id="brandSelector">
@@ -106,40 +106,40 @@
             <button class="brand-btn selected" data-brand="cv">COVE</button>
           </div>
           <div class="mode-toggle">
-            <button class="mode-btn active" data-mode="single">ë¨ì¼ ê¸°ê°</button>
-            <button class="mode-btn" data-mode="compare">ê¸°ê° ë¹êµ</button>
+            <button class="mode-btn active" data-mode="single">단일 기간</button>
+            <button class="mode-btn" data-mode="compare">기간 비교</button>
           </div>
         </div>
       </div>
       <div class="header-dates" id="dateGroup">
         <div class="date-group">
-          <label>ê¸°ê° 1</label>
+          <label>기간 1</label>
           <div class="date-inputs">
             <input type="date" id="startDate1" value="2026-02-26">
-            <span>â</span>
+            <span>—</span>
             <input type="date" id="endDate1" value="2026-03-26">
           </div>
           <div class="quick-buttons">
-            <button class="quick-btn" data-days="7">7ì¼</button>
-            <button class="quick-btn" data-days="30">30ì¼</button>
-            <button class="quick-btn" data-days="90">90ì¼</button>
-            <button class="quick-btn" data-month="current">ì´ë²ë¬</button>
+            <button class="quick-btn" data-days="7">7일</button>
+            <button class="quick-btn" data-days="30">30일</button>
+            <button class="quick-btn" data-days="90">90일</button>
+            <button class="quick-btn" data-month="current">이번달</button>
           </div>
         </div>
         <div class="apply-btn-wrapper">
-          <button class="apply-btn" id="applyBtn">ì ì©</button>
+          <button class="apply-btn" id="applyBtn">적용</button>
         </div>
       </div>
       <div id="period2Group" class="hidden">
         <div class="date-group">
-          <label>ê¸°ê° 2</label>
+          <label>기간 2</label>
           <div class="date-inputs">
             <input type="date" id="startDate2">
-            <span>â</span>
+            <span>—</span>
             <input type="date" id="endDate2">
           </div>
           <div class="quick-buttons">
-            <button class="quick-btn" data-prev-period="true">ì§ì  ëê¸°ê°</button>
+            <button class="quick-btn" data-prev-period="true">직전 동기간</button>
           </div>
         </div>
       </div>
@@ -150,13 +150,13 @@
     <div class="charts-section">
       <div id="chartsContainer">
         <div class="chart-card">
-          <div class="chart-title">ë§¤ì¶ í¸ë ë</div>
+          <div class="chart-title">매출 트렌드</div>
           <div class="chart-container">
             <canvas id="gmvChart"></canvas>
           </div>
         </div>
         <div class="chart-card" style="margin-top:16px">
-          <div class="chart-title">ë§¤ì´ì¨ í¸ë ë</div>
+          <div class="chart-title">매총율 트렌드</div>
           <div class="chart-container">
             <canvas id="marginChart"></canvas>
           </div>
@@ -165,8 +165,8 @@
     </div>
     <div class="table-section">
       <div class="table-header">
-        <div class="table-title">ìíë³ ì¤ì </div>
-        <input type="text" class="search-box" id="searchBox" placeholder="ìíëª ê²ì...">
+        <div class="table-title">상품별 실적</div>
+        <input type="text" class="search-box" id="searchBox" placeholder="상품명 검색...">
       </div>
       <div class="table-wrapper">
         <table id="productsTable">
@@ -176,13 +176,13 @@
       </div>
     </div>
     <div class="footer">
-      <p>ë°ì´í° ê°±ì : <span id="dataUpdated">2026-03-27 09:00</span> (Athena ê¸°ì¤)</p>
+      <p>데이터 갱신: <span id="dataUpdated">2026-03-27 09:00</span> (Athena 기준)</p>
     </div>
   </div>
   <script src="data.js"></script>
   <script>
     // Backup DAYS_KR in case data.js doesn't load
-    if (typeof DAYS_KR === 'undefined') { const DAYS_KR=['ì¼','ì','í','ì','ëª©','ê¸','í ']; }
+    if (typeof DAYS_KR === 'undefined') { const DAYS_KR=['일','월','화','수','목','금','토']; }
 
     const BRAND_NAMES = {lr:'layer refine', lb:'layer basic', cv:'COVE'};
 
@@ -192,7 +192,7 @@
     let state={mode:'single',brands:['lr','lb','cv'],startDate1:'2026-02-26',endDate1:'2026-03-26',startDate2:'',endDate2:'',sortColumn:null,sortDir:'desc',expandedProducts:new Set(),searchTerm:'',gmvChart:null,marginChart:null,gmvChart2:null,marginChart2:null};
 
     function fmtDateLabel(d){return`${d.getMonth()+1}/${d.getDate()}(${DAYS_KR[d.getDay()]})`;}
-    function fmtKRW(val){if(!val||isNaN(val))return'0ë°±ë§';if(val>=1000000)return(val/1000000).toFixed(1)+'ë°±ë§';if(val>=10000)return(val/10000).toFixed(0)+'ë§';return val+'ì';}
+    function fmtKRW(val){if(!val||isNaN(val))return'0백만';if(val>=1000000)return(val/1000000).toFixed(1)+'백만';if(val>=10000)return(val/10000).toFixed(0)+'만';return val+'원';}
     function filterByDateRange(data,start,end){const startD=new Date(start);const endD=new Date(end);return data.filter(d=>{const date=new Date(d.date);return date>=startD&&date<=endD;});}
     function getSelectedBrands(){return Array.from(document.querySelectorAll('.brand-btn.selected')).map(b=>b.dataset.brand);}
 
@@ -219,7 +219,7 @@
         let achClass='green';if(achievement<100)achClass=achievement>=80?'orange':'red';
         const brandName=BRAND_NAMES[brand]||brand.toUpperCase();
         const card=document.createElement('div');card.className='kpi-card';
-        card.innerHTML=`<div class="kpi-header"><div class="kpi-title">${brandName}</div><div class="kpi-brand ${brand}">${brandName}</div></div><div class="kpi-values"><div class="kpi-value"><div class="kpi-value-label">ë§¤ì¶</div><div class="kpi-value-number">${fmtKRW(gmv1)}</div></div><div class="kpi-value"><div class="kpi-value-label">ìë</div><div class="kpi-value-number">${qty1.toLocaleString()}</div></div></div><div class="kpi-progress"><div class="kpi-progress-label"><span>ëª©í ë¬ì±ë¥ </span><span>${Math.min(achievement,999).toFixed(1)}% (ëª©í ${fmtKRW(target)})</span></div><div class="progress-bar"><div class="progress-fill ${achClass}" style="width: ${Math.min(achievement,100)}%"></div></div></div>`;
+        card.innerHTML=`<div class="kpi-header"><div class="kpi-title">${brandName}</div><div class="kpi-brand ${brand}">${brandName}</div></div><div class="kpi-values"><div class="kpi-value"><div class="kpi-value-label">매출</div><div class="kpi-value-number">${fmtKRW(gmv1)}</div></div><div class="kpi-value"><div class="kpi-value-label">수량</div><div class="kpi-value-number">${qty1.toLocaleString()}</div></div></div><div class="kpi-progress"><div class="kpi-progress-label"><span>목표 달성률</span><span>${Math.min(achievement,999).toFixed(1)}% (목표 ${fmtKRW(target)})</span></div><div class="progress-bar"><div class="progress-fill ${achClass}" style="width: ${Math.min(achievement,100)}%"></div></div></div>`;
         container.appendChild(card);
       });
     }
@@ -252,17 +252,17 @@
       if(isCompare){
         container.innerHTML=`
           <div class="charts-row">
-            <div class="chart-card"><div class="chart-title">ê¸°ê° 1 Â· ë§¤ì¶ í¸ë ë</div><div class="chart-container"><canvas id="gmvChart"></canvas></div></div>
-            <div class="chart-card"><div class="chart-title">ê¸°ê° 2 Â· ë§¤ì¶ í¸ë ë</div><div class="chart-container"><canvas id="gmvChart2"></canvas></div></div>
+            <div class="chart-card"><div class="chart-title">기간 1 · 매출 트렌드</div><div class="chart-container"><canvas id="gmvChart"></canvas></div></div>
+            <div class="chart-card"><div class="chart-title">기간 2 · 매출 트렌드</div><div class="chart-container"><canvas id="gmvChart2"></canvas></div></div>
           </div>
           <div class="charts-row" style="margin-top:16px">
-            <div class="chart-card"><div class="chart-title">ê¸°ê° 1 Â· ë§¤ì´ì¨ í¸ë ë</div><div class="chart-container"><canvas id="marginChart"></canvas></div></div>
-            <div class="chart-card"><div class="chart-title">ê¸°ê° 2 Â· ë§¤ì´ì¨ í¸ë ë</div><div class="chart-container"><canvas id="marginChart2"></canvas></div></div>
+            <div class="chart-card"><div class="chart-title">기간 1 · 매총율 트렌드</div><div class="chart-container"><canvas id="marginChart"></canvas></div></div>
+            <div class="chart-card"><div class="chart-title">기간 2 · 매총율 트렌드</div><div class="chart-container"><canvas id="marginChart2"></canvas></div></div>
           </div>`;
       } else {
         container.innerHTML=`
-          <div class="chart-card"><div class="chart-title">ë§¤ì¶ í¸ë ë</div><div class="chart-container"><canvas id="gmvChart"></canvas></div></div>
-          <div class="chart-card" style="margin-top:16px"><div class="chart-title">ë§¤ì´ì¨ í¸ë ë</div><div class="chart-container"><canvas id="marginChart"></canvas></div></div>`;
+          <div class="chart-card"><div class="chart-title">매출 트렌드</div><div class="chart-container"><canvas id="gmvChart"></canvas></div></div>
+          <div class="chart-card" style="margin-top:16px"><div class="chart-title">매총율 트렌드</div><div class="chart-container"><canvas id="marginChart"></canvas></div></div>`;
       }
     }
 
@@ -281,13 +281,13 @@
       // GMV chart period1
       state.gmvChart=new Chart(document.getElementById('gmvChart').getContext('2d'),{
         type:'line',plugins:[mk1],
-        data:{labels:period1.map(d=>fmtDateLabel(new Date(d.date))),datasets:[{label:'ë§¤ì¶',data:period1.map(d=>d.gmv),borderColor:'#35C5F0',backgroundColor:'rgba(53,197,240,0.1)',tension:0.3,fill:true,pointRadius:3,pointHoverRadius:5}]},
+        data:{labels:period1.map(d=>fmtDateLabel(new Date(d.date))),datasets:[{label:'매출',data:period1.map(d=>d.gmv),borderColor:'#35C5F0',backgroundColor:'rgba(53,197,240,0.1)',tension:0.3,fill:true,pointRadius:3,pointHoverRadius:5}]},
         options:{...baseOpts,scales:{y:{...gmvYOpts}}}
       });
       // Margin chart period1
       state.marginChart=new Chart(document.getElementById('marginChart').getContext('2d'),{
         type:'line',plugins:[makeMarkerPlugin(period1,'m1')],
-        data:{labels:period1.map(d=>fmtDateLabel(new Date(d.date))),datasets:[{label:'ë§¤ì´ì¨',data:period1.map(d=>d.mr),borderColor:'#35C5F0',backgroundColor:'rgba(53,197,240,0.1)',tension:0.3,fill:true,pointRadius:3,pointHoverRadius:5}]},
+        data:{labels:period1.map(d=>fmtDateLabel(new Date(d.date))),datasets:[{label:'매총율',data:period1.map(d=>d.mr),borderColor:'#35C5F0',backgroundColor:'rgba(53,197,240,0.1)',tension:0.3,fill:true,pointRadius:3,pointHoverRadius:5}]},
         options:{...baseOpts,scales:{y:{...mrYOpts}}}
       });
 
@@ -295,12 +295,12 @@
         const mk2=makeMarkerPlugin(period2,'p2');
         state.gmvChart2=new Chart(document.getElementById('gmvChart2').getContext('2d'),{
           type:'line',plugins:[mk2],
-          data:{labels:period2.map(d=>fmtDateLabel(new Date(d.date))),datasets:[{label:'ë§¤ì¶',data:period2.map(d=>d.gmv),borderColor:'#9BC4CB',backgroundColor:'rgba(155,196,203,0.1)',tension:0.3,fill:true,pointRadius:3,pointHoverRadius:5}]},
+          data:{labels:period2.map(d=>fmtDateLabel(new Date(d.date))),datasets:[{label:'매출',data:period2.map(d=>d.gmv),borderColor:'#9BC4CB',backgroundColor:'rgba(155,196,203,0.1)',tension:0.3,fill:true,pointRadius:3,pointHoverRadius:5}]},
           options:{...baseOpts,scales:{y:{...gmvYOpts}}}
         });
         state.marginChart2=new Chart(document.getElementById('marginChart2').getContext('2d'),{
           type:'line',plugins:[makeMarkerPlugin(period2,'m2')],
-          data:{labels:period2.map(d=>fmtDateLabel(new Date(d.date))),datasets:[{label:'ë§¤ì´ì¨',data:period2.map(d=>d.mr),borderColor:'#9BC4CB',backgroundColor:'rgba(155,196,203,0.1)',tension:0.3,fill:true,pointRadius:3,pointHoverRadius:5}]},
+          data:{labels:period2.map(d=>fmtDateLabel(new Date(d.date))),datasets:[{label:'매총율',data:period2.map(d=>d.mr),borderColor:'#9BC4CB',backgroundColor:'rgba(155,196,203,0.1)',tension:0.3,fill:true,pointRadius:3,pointHoverRadius:5}]},
           options:{...baseOpts,scales:{y:{...mrYOpts}}}
         });
       }
@@ -315,7 +315,7 @@
       if(state.sortColumn){products.sort((a,b)=>{let aVal=a[state.sortColumn];let bVal=b[state.sortColumn];if(typeof aVal==='string')aVal=aVal.toLowerCase();if(typeof bVal==='string')bVal=bVal.toLowerCase();const cmp=aVal<bVal?-1:aVal>bVal?1:0;return state.sortDir==='asc'?cmp:-cmp;});}
       const thead=document.getElementById('tableHead');const tbody=document.getElementById('tableBody');thead.innerHTML='';tbody.innerHTML='';
       const cols=['expand','name','brand','code','qty','gmv','mr','imp','ctr','cvr'];
-      const colHeaders=['','ìíëª','ë¸ëë','ì½ë','ê¸°ê° ìë','ê¸°ê° ë§¤ì¶','ë§¤ì´ì¨','ìíë ì','CTR','CVR'];
+      const colHeaders=['','상품명','브랜드','코드','기간 수량','기간 매출','매총율','임프레션','CTR','CVR'];
       const headerRow=thead.insertRow();
       colHeaders.forEach(h=>{const th=document.createElement('th');th.textContent=h;if(h&&h!=='')th.className='sortable';headerRow.appendChild(th);});
       products.forEach(prod=>{
@@ -323,7 +323,7 @@
         const cvr=prod.click>0?((prod.qty/prod.click)*100).toFixed(2):'0.00';
         const pRow=tbody.insertRow();pRow.className='product-row';
         const brandName=BRAND_NAMES[prod.brand]||prod.brand.toUpperCase();
-        let expandHtml=`<button class="expand-btn ${expanded?'expanded':''}" data-product="${prod.code}">í¼ì¹ê¸°</button>`;
+        let expandHtml=`<button class="expand-btn ${expanded?'expanded':''}" data-product="${prod.code}">펼치기</button>`;
         let cells=[expandHtml,prod.name,`<span class="brand-tag ${prod.brand}">${brandName}</span>`,`<span class="product-code">${prod.code}</span>`,prod.qty.toLocaleString(),fmtKRW(prod.gmv),prod.mr.toFixed(1)+'%',prod.imp.toLocaleString(),prod.ctr.toFixed(2)+'%',cvr+'%'];
         cells.forEach((c,i)=>{const td=pRow.insertCell(i);if(i===0){td.innerHTML=c;}else if(i===1){td.innerHTML=c;td.style.textAlign='left';}else if(['qty','gmv','imp'].includes(cols[i])){td.className='number';td.textContent=c;}else if(cols[i]==='mr'){td.className='margin-cell '+(prod.mr>=45?'green':prod.mr>=35?'orange':'red');td.textContent=c;}else{td.textContent=c;}});
         prod.options.forEach(opt=>{
