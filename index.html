@@ -325,7 +325,7 @@
         const brandName=BRAND_NAMES[prod.brand]||prod.brand.toUpperCase();
         let expandHtml=`<button class="expand-btn ${expanded?'expanded':''}" data-product="${prod.code}">펼치기</button>`;
         let cells=[expandHtml,prod.name,`<span class="brand-tag ${prod.brand}">${brandName}</span>`,`<span class="product-code">${prod.code}</span>`,prod.qty.toLocaleString(),fmtKRW(prod.gmv),prod.mr.toFixed(1)+'%',prod.imp.toLocaleString(),prod.ctr.toFixed(2)+'%',cvr+'%'];
-        cells.forEach((c,i)=>{const td=pRow.insertCell(i);if(i===0){td.innerHTML=c;}else if(i===1){td.innerHTML=c;td.style.textAlign='left';}else if(['qty','gmv','imp'].includes(cols[i])){td.className='number';td.textContent=c;}else if(cols[i]==='mr'){td.className='margin-cell '+(prod.mr>=45?'green':prod.mr>=35?'orange':'red');td.textContent=c;}else{td.textContent=c;}});
+        cells.forEach((c,i)=>{const td=pRow.insertCell(i);if(i<=3){td.innerHTML=c;if(i===1)td.style.textAlign='left';}else if(['qty','gmv','imp'].includes(cols[i])){td.className='number';td.textContent=c;}else if(cols[i]==='mr'){td.className='margin-cell '+(prod.mr>=45?'green':prod.mr>=35?'orange':'red');td.textContent=c;}else{td.textContent=c;}});
         prod.options.forEach(opt=>{
           const oRow=tbody.insertRow();oRow.className='option-row';if(expanded)oRow.classList.add('show');oRow.dataset.product=prod.code;
           const optCvr=prod.click>0?((opt.qty/prod.click)*100).toFixed(2):'0.00';
