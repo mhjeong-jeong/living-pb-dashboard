@@ -179,7 +179,7 @@
       <p>데이터 갱신: <span id="dataUpdated">2026-03-27 09:00</span> (Athena 기준)</p>
     </div>
   </div>
-  <script src="data.js?v=20260329d"></script>
+  <script src="data.js?v=20260329e"></script>
   <script>
     // Backup DAYS_KR in case data.js doesn't load
     if (typeof DAYS_KR === 'undefined') { const DAYS_KR=['일','월','화','수','목','금','토']; }
@@ -226,7 +226,7 @@
       if(brands.length>0){
         let tGmv=0,tQty=0,tTarget=0;
         brands.forEach(brand=>{
-          if(hasBrandData){DAILY_BRAND_DATA.forEach(r=>{if(r[1]===brand){const d=new Date(r[0]);if(d>=startD&&d<=endD){tGmv+=r[2];tQty+=r[3];}}});}
+          if(typeof DAILY_BRAND_DATA!=='undefined'&&DAILY_BRAND_DATA.length>0){DAILY_BRAND_DATA.forEach(r=>{if(r[1]===brand){const d=new Date(r[0]);if(d>=startD&&d<=endD){tGmv+=r[2];tQty+=r[3];}}});}
           tTarget+=(TARGETS[brand]||0);
         });
         const tAch=tTarget>0?(tGmv/tTarget)*100:0;
