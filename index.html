@@ -179,7 +179,7 @@
       <p>데이터 갱신: <span id="dataUpdated">2026-03-27 09:00</span> (Athena 기준)</p>
     </div>
   </div>
-  <script src="data.js?v=20260329b"></script>
+  <script src="data.js?v=20260329c"></script>
   <script>
     // Backup DAYS_KR in case data.js doesn't load
     if (typeof DAYS_KR === 'undefined') { const DAYS_KR=['일','월','화','수','목','금','토']; }
@@ -192,6 +192,7 @@
     let state={mode:'single',brands:['lr','lb','cv'],startDate1:'2026-02-26',endDate1:'2026-03-26',startDate2:'',endDate2:'',sortColumn:null,sortDir:'desc',expandedProducts:new Set(),searchTerm:'',gmvChart:null,marginChart:null,gmvChart2:null,marginChart2:null};
 
     function fmtDateLabel(d){return`${d.getMonth()+1}/${d.getDate()}(${DAYS_KR[d.getDay()]})`;}
+    function fmtEok(val){if(!val||isNaN(val))return'0억';return(val/100000000).toFixed(1)+'억';}
     function fmtKRW(val){if(!val||isNaN(val))return'0원';if(val>=100000000)return(val/100000000).toFixed(1)+'억';if(val>=10000)return(val/10000).toFixed(0)+'만';return val.toLocaleString()+'원';}
     function filterByDateRange(data,start,end){const startD=new Date(start);const endD=new Date(end);return data.filter(d=>{const date=new Date(d.date);return date>=startD&&date<=endD;});}
     function getSelectedBrands(){return Array.from(document.querySelectorAll('.brand-btn.selected')).map(b=>b.dataset.brand);}
@@ -219,7 +220,7 @@
         let achClass='green';if(achievement<100)achClass=achievement>=80?'orange':'red';
         const brandName=BRAND_NAMES[brand]||brand.toUpperCase();
         const card=document.createElement('div');card.className='kpi-card';
-        card.innerHTML=`<div class="kpi-header"><div class="kpi-title">${brandName}</div><div class="kpi-brand ${brand}">${brandName}</div></div><div class="kpi-values"><div class="kpi-value"><div class="kpi-value-label">매출</div><div class="kpi-value-number">${fmtKRW(gmv1)}</div></div><div class="kpi-value"><div class="kpi-value-label">수량</div><div class="kpi-value-number">${qty1.toLocaleString()}</div></div></div><div class="kpi-progress"><div class="kpi-progress-label"><span>목표 달성률</span><span>${Math.min(achievement,999).toFixed(1)}% (목표 ${fmtKRW(target)})</span></div><div class="progress-bar"><div class="progress-fill ${achClass}" style="width: ${Math.min(achievement,100)}%"></div></div></div>`;
+        card.innerHTML=`<div class="kpi-header"><div class="kpi-title">${brandName}</div><div class="kpi-brand ${brand}">${brandName}</div></div><div class="kpi-values"><div class="kpi-value"><div class="kpi-value-label">매출</div><div class="kpi-value-number">${fmtEok(gmv1)}</div></div><div class="kpi-value"><div class="kpi-value-label">수량</div><div class="kpi-value-number">${qty1.toLocaleString()}</div></div></div><div class="kpi-progress"><div class="kpi-progress-label"><span>목표 달성률</span><span>${Math.min(achievement,999).toFixed(1)}% (목표 ${fmtEok(target)})</span></div><div class="progress-bar"><div class="progress-fill ${achClass}" style="width: ${Math.min(achievement,100)}%"></div></div></div>`;
         container.appendChild(card);
       });
     }
