@@ -179,7 +179,7 @@
       <p>데이터 갱신: <span id="dataUpdated">2026-03-27 09:00</span> (Athena 기준)</p>
     </div>
   </div>
-  <script src="data.js?v=20260329c"></script>
+  <script src="data.js?v=20260329d"></script>
   <script>
     // Backup DAYS_KR in case data.js doesn't load
     if (typeof DAYS_KR === 'undefined') { const DAYS_KR=['일','월','화','수','목','금','토']; }
@@ -223,6 +223,18 @@
         card.innerHTML=`<div class="kpi-header"><div class="kpi-title">${brandName}</div><div class="kpi-brand ${brand}">${brandName}</div></div><div class="kpi-values"><div class="kpi-value"><div class="kpi-value-label">매출</div><div class="kpi-value-number">${fmtEok(gmv1)}</div></div><div class="kpi-value"><div class="kpi-value-label">수량</div><div class="kpi-value-number">${qty1.toLocaleString()}</div></div></div><div class="kpi-progress"><div class="kpi-progress-label"><span>목표 달성률</span><span>${Math.min(achievement,999).toFixed(1)}% (목표 ${fmtEok(target)})</span></div><div class="progress-bar"><div class="progress-fill ${achClass}" style="width: ${Math.min(achievement,100)}%"></div></div></div>`;
         container.appendChild(card);
       });
+      if(brands.length>0){
+        let tGmv=0,tQty=0,tTarget=0;
+        brands.forEach(brand=>{
+          if(hasBrandData){DAILY_BRAND_DATA.forEach(r=>{if(r[1]===brand){const d=new Date(r[0]);if(d>=startD&&d<=endD){tGmv+=r[2];tQty+=r[3];}}});}
+          tTarget+=(TARGETS[brand]||0);
+        });
+        const tAch=tTarget>0?(tGmv/tTarget)*100:0;
+        let tCls='green';if(tAch<100)tCls=tAch>=80?'orange':'red';
+        const tc=document.createElement('div');tc.className='kpi-card';tc.style.borderTop='3px solid #333';
+        tc.innerHTML=`<div class="kpi-header"><div class="kpi-title">전체</div><div class="kpi-brand" style="background:#333;color:#fff;padding:2px 10px;border-radius:12px;font-size:11px;">TOTAL</div></div><div class="kpi-values"><div class="kpi-value"><div class="kpi-value-label">매출</div><div class="kpi-value-number">${fmtEok(tGmv)}</div></div><div class="kpi-value"><div class="kpi-value-label">수량</div><div class="kpi-value-number">${tQty.toLocaleString()}</div></div></div><div class="kpi-progress"><div class="kpi-progress-label"><span>목표 달성률</span><span>${Math.min(tAch,999).toFixed(1)}% (목표 ${fmtEok(tTarget)})</span></div><div class="progress-bar"><div class="progress-fill ${tCls}" style="width: ${Math.min(tAch,100)}%"></div></div></div>`;
+        container.appendChild(tc);
+      }
     }
 
     function makeMarkerPlugin(period,label){
